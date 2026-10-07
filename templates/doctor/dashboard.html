@@ -1,0 +1,344 @@
+{% extends 'layout.html' %}
+
+{% block title %}Doctor Dashboard - MediConnect Pro{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="mb-3">
+            <i class="fas fa-chart-line me-2"></i>Doctor Dashboard
+        </h2>
+        <p class="text-muted">Welcome back, Dr. {{ doctor.first_name }} {{ doctor.last_name }}</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{{ url_for('doctor.new_appointment') }}" class="btn btn-primary mb-2">
+            <i class="fas fa-plus me-1"></i> New Appointment
+        </a>
+        <a href="{{ url_for('auth.register_staff') }}" class="btn btn-outline-primary mb-2">
+            <i class="fas fa-user-plus me-1"></i> Add Staff
+        </a>
+    </div>
+</div>
+
+<!-- Stats overview -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 fw-bold text-primary mb-2">{{ appointment_stats['scheduled'] }}</div>
+                <div class="text-muted">Upcoming Appointments</div>
+            </div>
+            <div class="card-footer bg-primary text-white">
+                <i class="fas fa-calendar-check me-1"></i> Scheduled
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 fw-bold text-success mb-2">{{ appointment_stats['completed'] }}</div>
+                <div class="text-muted">Completed Appointments</div>
+            </div>
+            <div class="card-footer bg-success text-white">
+                <i class="fas fa-check-circle me-1"></i> Completed
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 fw-bold text-danger mb-2">{{ appointment_stats['cancelled'] }}</div>
+                <div class="text-muted">Cancelled Appointments</div>
+            </div>
+            <div class="card-footer bg-danger text-white">
+                <i class="fas fa-times-circle me-1"></i> Cancelled
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 fw-bold text-secondary mb-2">{{ personal_staff|length }}</div>
+                <div class="text-muted">Staff Members</div>
+            </div>
+            <div class="card-footer bg-secondary text-white">
+                <i class="fas fa-user-nurse me-1"></i> Assigned Staff
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Today's appointments -->
+    <div class="col-lg-7 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-day me-1"></i> Today's Appointments
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    {% if today_appointments %}
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Patient</th>
+                                    <th>Reason</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appointment in today_appointments %}
+                                    <tr>
+                                        <td>{{ appointment.start_time.strftime('%I:%M %p') }}</td>
+                                        <td>
+                                            <a href="{{ url_for('doctor.patient_detail', id=appointment.patient.id) }}">
+                                                {{ appointment.patient.first_name }} {{ appointment.patient.last_name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ appointment.reason|truncate(30) }}</td>
+                                        <td>
+                                            {% if appointment.status == 'scheduled' %}
+                                                <span class="badge bg-warning text-dark">Scheduled</span>
+                                            {% elif appointment.status == 'completed' %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% elif appointment.status == 'cancelled' %}
+                                                <span class="badge bg-danger">Cancelled</span>
+                                            {% elif appointment.status == 'no-show' %}
+                                                <span class="badge bg-secondary">No Show</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="appointmentActions{{ appointment.id }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    Actions
+                                                </button>
+                                                <ul class="dropdown-menu" aria-labelledby="appointmentActions{{ appointment.id }}">
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ url_for('doctor.appointment_status', id=appointment.id) }}">
+                                                            <i class="fas fa-edit me-1"></i> Update Status
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ url_for('doctor.new_medical_record', appointment_id=appointment.id) }}">
+                                                            <i class="fas fa-notes-medical me-1"></i> Add Record
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ url_for('doctor.new_prescription', appointment_id=appointment.id) }}">
+                                                            <i class="fas fa-prescription me-1"></i> Prescribe
+                                                        </a>
+                                                    </li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li>
+                                                        <form action="{{ url_for('appointments.cancel_appointment', id=appointment.id) }}" method="post">
+                                                            <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Are you sure you want to cancel this appointment?');">
+                                                                <i class="fas fa-times-circle me-1"></i> Cancel
+                                                            </button>
+                                                        </form>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                            <p>No appointments scheduled for today</p>
+                            <a href="{{ url_for('doctor.new_appointment') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i> Schedule Appointment
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Appointment chart -->
+    <div class="col-lg-5 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-1"></i> Weekly Appointments
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="appointmentsChart" height="270"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Upcoming appointments -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-alt me-1"></i> Upcoming Appointments
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% if upcoming_appointments %}
+                        {% for appointment in upcoming_appointments %}
+                            <a href="{{ url_for('doctor.edit_appointment', id=appointment.id) }}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ appointment.patient.first_name }} {{ appointment.patient.last_name }}</h6>
+                                    <small>{{ appointment.start_time.strftime('%b %d, %I:%M %p') }}</small>
+                                </div>
+                                <p class="mb-1 text-muted small">{{ appointment.reason|truncate(50) }}</p>
+                            </a>
+                        {% endfor %}
+                        <div class="d-grid gap-2 mt-3">
+                            <a href="{{ url_for('doctor.appointments') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-calendar me-1"></i> View All Appointments
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+                            <p>No upcoming appointments</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent patients -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-injured me-1"></i> Recent Patients
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group list-group-flush">
+                    {% if recent_patients %}
+                        {% for patient in recent_patients %}
+                            <a href="{{ url_for('doctor.patient_detail', id=patient.id) }}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ patient.first_name }} {{ patient.last_name }}</h6>
+                                    <small class="text-muted">{{ patient.gender|capitalize if patient.gender else 'N/A' }}</small>
+                                </div>
+                                <p class="mb-1 text-muted small">
+                                    {% if patient.date_of_birth %}
+                                        {{ patient.age }} years old
+                                    {% endif %}
+                                    {% if patient.phone %}
+                                        • {{ patient.phone }}
+                                    {% endif %}
+                                </p>
+                            </a>
+                        {% endfor %}
+                        <div class="d-grid gap-2 mt-3">
+                            <a href="{{ url_for('doctor.patients') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-users me-1"></i> View All Patients
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-user-injured fa-3x text-muted mb-3"></i>
+                            <p>No recent patients</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Staff section -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-nurse me-1"></i> Your Staff
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if personal_staff %}
+                        {% for staff in personal_staff %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ staff.first_name }} {{ staff.last_name }}</h5>
+                                        <h6 class="card-subtitle mb-2 text-muted">{{ staff.position|capitalize }}</h6>
+                                        <p class="card-text">
+                                            <i class="fas fa-phone me-1 text-primary"></i> {{ staff.phone }}
+                                        </p>
+                                        <a href="{{ url_for('doctor.edit_staff', id=staff.id) }}" class="card-link">
+                                            <i class="fas fa-edit me-1"></i> Edit
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="col-12">
+                            <div class="text-center py-4">
+                                <i class="fas fa-user-nurse fa-3x text-muted mb-3"></i>
+                                <p>You don't have any staff members assigned yet</p>
+                                <a href="{{ url_for('auth.register_staff') }}" class="btn btn-primary">
+                                    <i class="fas fa-user-plus me-1"></i> Add Staff Member
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Appointments chart
+        var appointmentsCtx = document.getElementById('appointmentsChart').getContext('2d');
+        var appointmentsChart = new Chart(appointmentsCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_labels|tojson }},
+                datasets: [{
+                    label: 'Number of Appointments',
+                    data: {{ chart_data|tojson }},
+                    backgroundColor: 'rgba(13, 110, 253, 0.6)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

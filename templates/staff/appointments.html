@@ -1,0 +1,161 @@
+{% extends 'layout.html' %}
+
+{% block title %}Appointments - MediConnect Pro{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="mb-3">
+            <i class="fas fa-calendar-check me-2"></i>Appointments
+        </h2>
+        <p class="text-muted">Manage patient appointments and schedule.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{{ url_for('staff.new_appointment') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> New Appointment
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-filter me-1"></i> Filters
+        </h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('staff.appointments') }}" method="get">
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <label for="doctor_id" class="form-label">Doctor</label>
+                    <select name="doctor_id" id="doctor_id" class="form-select">
+                        <option value="">All Doctors</option>
+                        {% for doctor in doctors %}
+                            <option value="{{ doctor.id }}" {% if selected_doctor_id|int == doctor.id %}selected{% endif %}>
+                                Dr. {{ doctor.first_name }} {{ doctor.last_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                        <option value="scheduled" {% if status_filter == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                        <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        <option value="no-show" {% if status_filter == 'no-show' %}selected{% endif %}>No Show</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date.strftime('%Y-%m-%d') if start_date else '' }}">
+                </div>
+                <div class="col-md-3 mb-3">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date.strftime('%Y-%m-%d') if end_date else '' }}">
+                </div>
+            </div>
+            <div class="text-end">
+                <a href="{{ url_for('staff.appointments') }}" class="btn btn-secondary me-2">Reset</a>
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Appointments list -->
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-1"></i> Appointment List
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            {% if appointments %}
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Patient</th>
+                            <th>Doctor</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in appointments %}
+                            <tr>
+                                <td>{{ appointment.start_time.strftime('%b %d, %Y %I:%M %p') }}</td>
+                                <td>
+                                    <a href="{{ url_for('staff.patient_detail', id=appointment.patient.id) }}">
+                                        {{ appointment.patient.first_name }} {{ appointment.patient.last_name }}
+                                    </a>
+                                </td>
+                                <td>Dr. {{ appointment.doctor.first_name }} {{ appointment.doctor.last_name }}</td>
+                                <td>{{ appointment.reason|truncate(30) }}</td>
+                                <td>
+                                    {% if appointment.status == 'scheduled' %}
+                                        <span class="badge bg-warning text-dark">Scheduled</span>
+                                    {% elif appointment.status == 'completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% elif appointment.status == 'cancelled' %}
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    {% elif appointment.status == 'no-show' %}
+                                        <span class="badge bg-secondary">No Show</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Actions
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" href="{{ url_for('staff.edit_appointment', id=appointment.id) }}">
+                                                    <i class="fas fa-edit me-1"></i> Edit Details
+                                                </a>
+                                            </li>
+                                            {% if appointment.status == 'scheduled' %}
+                                                <li>
+                                                    <form action="{{ url_for('appointments.cancel_appointment', id=appointment.id) }}" method="post">
+                                                        <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Are you sure you want to cancel this appointment?');">
+                                                            <i class="fas fa-times-circle me-1"></i> Cancel
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            {% endif %}
+                                            {% if appointment.status == 'completed' and not appointment.invoice %}
+                                                <li>
+                                                    <a class="dropdown-item" href="{{ url_for('staff.create_invoice') }}?appointment_id={{ appointment.id }}">
+                                                        <i class="fas fa-file-invoice-dollar me-1"></i> Create Invoice
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                    <p>No appointments found with the selected filters</p>
+                    {% if status_filter != 'all' or start_date or end_date or selected_doctor_id %}
+                        <a href="{{ url_for('staff.appointments') }}" class="btn btn-primary">Clear Filters</a>
+                    {% else %}
+                        <a href="{{ url_for('staff.new_appointment') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i> Schedule New Appointment
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends 'layout.html' %}
+
+{% block title %}Staff Management - MediConnect Pro{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="mb-3">
+            <i class="fas fa-user-nurse me-2"></i>Staff Management
+        </h2>
+        <p class="text-muted">Manage your personal staff members.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{{ url_for('auth.register_staff') }}" class="btn btn-primary">
+            <i class="fas fa-user-plus me-1"></i> Add Staff Member
+        </a>
+    </div>
+</div>
+
+<!-- Staff list -->
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-1"></i> Your Staff
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if staff %}
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                {% for staff_member in staff %}
+                    <div class="col">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">{{ staff_member.first_name }} {{ staff_member.last_name }}</h5>
+                            </div>
+                            <div class="card-body">
+                                <h6 class="card-subtitle mb-3 text-muted">{{ staff_member.position|capitalize }}</h6>
+                                
+                                <p class="card-text mb-2">
+                                    <i class="fas fa-envelope text-primary me-2"></i>
+                                    {{ staff_member.user.email }}
+                                </p>
+                                
+                                <p class="card-text mb-2">
+                                    <i class="fas fa-phone text-primary me-2"></i>
+                                    {{ staff_member.phone }}
+                                </p>
+                                
+                                {% if staff_member.address %}
+                                    <p class="card-text mb-2">
+                                        <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                                        {{ staff_member.address }}
+                                    </p>
+                                {% endif %}
+                                
+                                <p class="card-text mb-0">
+                                    <i class="fas fa-user-check text-primary me-2"></i>
+                                    Status: 
+                                    {% if staff_member.user.is_approved %}
+                                        {% if staff_member.user.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Pending Approval</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="card-footer">
+                                <a href="{{ url_for('doctor.edit_staff', id=staff_member.id) }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit me-1"></i> Edit
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-user-nurse fa-3x text-muted mb-3"></i>
+                <p>You don't have any staff members yet</p>
+                <a href="{{ url_for('auth.register_staff') }}" class="btn btn-primary">
+                    <i class="fas fa-user-plus me-1"></i> Add Staff Member
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

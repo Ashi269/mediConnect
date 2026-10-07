@@ -1,0 +1,82 @@
+{% extends 'layout.html' %}
+
+{% block title %}My Medical Records - MediConnect Pro{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="mb-3">
+            <i class="fas fa-notes-medical me-2"></i>My Medical Records
+        </h2>
+        <p class="text-muted">View your medical history and treatment records.</p>
+    </div>
+</div>
+
+<!-- Medical Records list -->
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-1"></i> Medical History
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if medical_records %}
+            <div class="row">
+                {% for record in medical_records %}
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">{{ record.date.strftime('%b %d, %Y') }}</h5>
+                                    <span class="badge bg-primary">Dr. {{ record.doctor.first_name }} {{ record.doctor.last_name }}</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <h6>Chief Complaint:</h6>
+                                    <p>{{ record.chief_complaint }}</p>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <h6>Diagnosis:</h6>
+                                    <p>{{ record.diagnosis }}</p>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <h6>Treatment Plan:</h6>
+                                    <p>{{ record.treatment_plan }}</p>
+                                </div>
+                                
+                                {% if record.vital_signs %}
+                                    <div class="mb-3">
+                                        <h6>Vital Signs:</h6>
+                                        <p>{{ record.vital_signs }}</p>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if record.notes %}
+                                    <div class="mb-3">
+                                        <h6>Notes:</h6>
+                                        <p class="text-muted">{{ record.notes }}</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer">
+                                <a href="{{ url_for('patient.medical_record_detail', id=record.id) }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i> View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-notes-medical fa-3x text-muted mb-3"></i>
+                <p>No medical records found</p>
+                <p class="text-muted">You don't have any medical records in your history yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,266 @@
+{% extends 'layout.html' %}
+
+{% block title %}Staff Dashboard - MediConnect Pro{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="mb-3">
+            <i class="fas fa-chart-line me-2"></i>Staff Dashboard
+        </h2>
+        <p class="text-muted">Welcome back, {{ staff.first_name }} {{ staff.last_name }}</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{{ url_for('staff.new_appointment') }}" class="btn btn-primary mb-2">
+            <i class="fas fa-plus me-1"></i> New Appointment
+        </a>
+        <a href="{{ url_for('staff.new_patient') }}" class="btn btn-outline-primary mb-2">
+            <i class="fas fa-user-plus me-1"></i> Register Patient
+        </a>
+    </div>
+</div>
+
+<!-- Stats overview -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 fw-bold text-primary mb-2">{{ appointment_stats['scheduled'] }}</div>
+                <div class="text-muted">Upcoming Appointments</div>
+            </div>
+            <div class="card-footer bg-primary text-white">
+                <i class="fas fa-calendar-check me-1"></i> Scheduled
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 fw-bold text-success mb-2">{{ appointment_stats['completed'] }}</div>
+                <div class="text-muted">Completed Appointments</div>
+            </div>
+            <div class="card-footer bg-success text-white">
+                <i class="fas fa-check-circle me-1"></i> Completed
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 fw-bold text-danger mb-2">{{ appointment_stats['cancelled'] }}</div>
+                <div class="text-muted">Cancelled Appointments</div>
+            </div>
+            <div class="card-footer bg-danger text-white">
+                <i class="fas fa-times-circle me-1"></i> Cancelled
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 fw-bold text-warning mb-2">{{ pending_invoices }}</div>
+                <div class="text-muted">Pending Invoices</div>
+            </div>
+            <div class="card-footer bg-warning text-dark">
+                <i class="fas fa-file-invoice-dollar me-1"></i> Pending Payment
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Today's appointments -->
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-day me-1"></i> Today's Appointments
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    {% if today_appointments %}
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Patient</th>
+                                    <th>Doctor</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appointment in today_appointments %}
+                                    <tr>
+                                        <td>{{ appointment.start_time.strftime('%I:%M %p') }}</td>
+                                        <td>
+                                            <a href="{{ url_for('staff.patient_detail', id=appointment.patient.id) }}">
+                                                {{ appointment.patient.first_name }} {{ appointment.patient.last_name }}
+                                            </a>
+                                        </td>
+                                        <td>Dr. {{ appointment.doctor.first_name }} {{ appointment.doctor.last_name }}</td>
+                                        <td>
+                                            {% if appointment.status == 'scheduled' %}
+                                                <span class="badge bg-warning text-dark">Scheduled</span>
+                                            {% elif appointment.status == 'completed' %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% elif appointment.status == 'cancelled' %}
+                                                <span class="badge bg-danger">Cancelled</span>
+                                            {% elif appointment.status == 'no-show' %}
+                                                <span class="badge bg-secondary">No Show</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="dropdown">
+                                                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                    Actions
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <a class="dropdown-item" href="{{ url_for('staff.edit_appointment', id=appointment.id) }}">
+                                                            <i class="fas fa-edit me-1"></i> Edit
+                                                        </a>
+                                                    </li>
+                                                    {% if appointment.status == 'completed' and not appointment.invoice %}
+                                                        <li>
+                                                            <a class="dropdown-item" href="{{ url_for('staff.create_invoice') }}?appointment_id={{ appointment.id }}">
+                                                                <i class="fas fa-file-invoice-dollar me-1"></i> Create Invoice
+                                                            </a>
+                                                        </li>
+                                                    {% endif %}
+                                                    {% if appointment.status == 'scheduled' %}
+                                                        <li>
+                                                            <form action="{{ url_for('appointments.cancel_appointment', id=appointment.id) }}" method="post">
+                                                                <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Are you sure you want to cancel this appointment?');">
+                                                                    <i class="fas fa-times-circle me-1"></i> Cancel
+                                                                </button>
+                                                            </form>
+                                                        </li>
+                                                    {% endif %}
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                            <p>No appointments scheduled for today</p>
+                            <a href="{{ url_for('staff.new_appointment') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i> Schedule Appointment
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Doctors or Assigned Doctor -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                {% if assigned_doctor %}
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-md me-1"></i> Assigned Doctor
+                    </h5>
+                {% else %}
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-md me-1"></i> Doctors
+                    </h5>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if assigned_doctor %}
+                    <div class="text-center mb-3">
+                        <i class="fas fa-user-md fa-3x text-primary mb-3"></i>
+                        <h4>Dr. {{ assigned_doctor.first_name }} {{ assigned_doctor.last_name }}</h4>
+                        <p class="text-muted">{{ assigned_doctor.specialty }}</p>
+                        
+                        {% if assigned_doctor.phone %}
+                            <p>
+                                <i class="fas fa-phone me-2 text-primary"></i>
+                                {{ assigned_doctor.phone }}
+                            </p>
+                        {% endif %}
+                        
+                        <p>
+                            <i class="fas fa-envelope me-2 text-primary"></i>
+                            {{ assigned_doctor.user.email }}
+                        </p>
+                    </div>
+                {% elif doctors %}
+                    <div class="list-group">
+                        {% for doctor in doctors %}
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">Dr. {{ doctor.first_name }} {{ doctor.last_name }}</h6>
+                                    <small>{{ doctor.specialty }}</small>
+                                </div>
+                                <p class="mb-1 small">
+                                    <i class="fas fa-envelope me-1 text-primary"></i> {{ doctor.user.email }}
+                                </p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-user-md fa-3x text-muted mb-3"></i>
+                        <p>No doctors available</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent patients -->
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-injured me-1"></i> Recent Patients
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if recent_patients %}
+                        {% for patient in recent_patients %}
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ patient.first_name }} {{ patient.last_name }}</h5>
+                                        <h6 class="card-subtitle mb-2 text-muted">
+                                            {% if patient.gender %}{{ patient.gender|capitalize }}{% endif %}
+                                            {% if patient.date_of_birth %}, {{ patient.age }} years{% endif %}
+                                        </h6>
+                                        <p class="card-text">
+                                            <i class="fas fa-phone me-1 text-primary"></i> {{ patient.phone }}
+                                        </p>
+                                        <a href="{{ url_for('staff.patient_detail', id=patient.id) }}" class="card-link">View Details</a>
+                                        <a href="{{ url_for('staff.new_appointment') }}?patient_id={{ patient.id }}" class="card-link">Schedule Appointment</a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="col-12">
+                            <div class="text-center py-4">
+                                <i class="fas fa-user-injured fa-3x text-muted mb-3"></i>
+                                <p>No patients registered yet</p>
+                                <a href="{{ url_for('staff.new_patient') }}" class="btn btn-primary">
+                                    <i class="fas fa-user-plus me-1"></i> Register Patient
+                                </a>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,264 @@
+{% extends 'layout.html' %}
+
+{% block title %}Admin Dashboard - MediConnect Pro{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="mb-3">
+            <i class="fas fa-chart-line me-2"></i>Admin Dashboard
+        </h2>
+        <p class="text-muted">Overview of clinic operations and statistics.</p>
+    </div>
+</div>
+
+<!-- Stats cards -->
+<div class="row mb-4">
+    <div class="col-md-3 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 fw-bold text-primary mb-2">{{ total_doctors }}</div>
+                <div class="text-muted">Doctors</div>
+            </div>
+            <div class="card-footer bg-primary text-white">
+                <i class="fas fa-user-md me-1"></i> Total Registered
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 fw-bold text-primary mb-2">{{ total_patients }}</div>
+                <div class="text-muted">Patients</div>
+            </div>
+            <div class="card-footer bg-primary text-white">
+                <i class="fas fa-user-injured me-1"></i> Total Registered
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 fw-bold text-primary mb-2">{{ today_appointments }}</div>
+                <div class="text-muted">Appointments Today</div>
+            </div>
+            <div class="card-footer bg-primary text-white">
+                <i class="fas fa-calendar-check me-1"></i> Today's Schedule
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 fw-bold text-primary mb-2">{{ "${:,.2f}".format(total_revenue) }}</div>
+                <div class="text-muted">Total Revenue</div>
+            </div>
+            <div class="card-footer bg-primary text-white">
+                <i class="fas fa-dollar-sign me-1"></i> Revenue
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Appointments chart -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-bar me-1"></i> Appointments Last 7 Days
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="appointmentsChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pending approvals -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-check me-1"></i> Pending Approvals
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if pending_doctors or pending_staff %}
+                    <div class="list-group">
+                        {% for doctor in pending_doctors %}
+                            <a href="{{ url_for('admin.approve_users') }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-user-md me-1 text-primary"></i>
+                                <span>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</span>
+                                <span class="badge bg-warning text-dark float-end">Doctor</span>
+                            </a>
+                        {% endfor %}
+                        {% for staff in pending_staff %}
+                            <a href="{{ url_for('admin.approve_users') }}" class="list-group-item list-group-item-action">
+                                <i class="fas fa-user-nurse me-1 text-primary"></i>
+                                <span>{{ staff.first_name }} {{ staff.last_name }}</span>
+                                <span class="badge bg-info text-dark float-end">{{ staff.position|capitalize }}</span>
+                            </a>
+                        {% endfor %}
+                    </div>
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="{{ url_for('admin.approve_users') }}" class="btn btn-primary">
+                            <i class="fas fa-check-circle me-1"></i> Manage Approvals
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <p class="mb-0">No pending approvals</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent appointments -->
+    <div class="col-md-7 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-alt me-1"></i> Recent Appointments
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    {% if recent_appointments %}
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Doctor</th>
+                                    <th>Date & Time</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appointment in recent_appointments %}
+                                    <tr>
+                                        <td>{{ appointment.patient.first_name }} {{ appointment.patient.last_name }}</td>
+                                        <td>Dr. {{ appointment.doctor.first_name }} {{ appointment.doctor.last_name }}</td>
+                                        <td>{{ appointment.start_time.strftime('%b %d, %Y %I:%M %p') }}</td>
+                                        <td>
+                                            {% if appointment.status == 'scheduled' %}
+                                                <span class="badge bg-warning text-dark">Scheduled</span>
+                                            {% elif appointment.status == 'completed' %}
+                                                <span class="badge bg-success">Completed</span>
+                                            {% elif appointment.status == 'cancelled' %}
+                                                <span class="badge bg-danger">Cancelled</span>
+                                            {% elif appointment.status == 'no-show' %}
+                                                <span class="badge bg-secondary">No Show</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                            <p>No recent appointments found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick stats -->
+    <div class="col-md-5 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie me-1"></i> Overview
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-user-md text-primary me-2"></i> Total Doctors
+                        </div>
+                        <span class="badge bg-primary rounded-pill">{{ total_doctors }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-user-injured text-primary me-2"></i> Total Patients
+                        </div>
+                        <span class="badge bg-primary rounded-pill">{{ total_patients }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-user-nurse text-primary me-2"></i> Total Staff
+                        </div>
+                        <span class="badge bg-primary rounded-pill">{{ total_staff }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-calendar-check text-primary me-2"></i> Total Appointments
+                        </div>
+                        <span class="badge bg-primary rounded-pill">{{ total_appointments }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <i class="fas fa-file-invoice-dollar text-warning me-2"></i> Pending Invoices
+                        </div>
+                        <span class="badge bg-warning text-dark rounded-pill">{{ pending_invoices }}</span>
+                    </li>
+                </ul>
+                
+                <div class="d-grid gap-2 mt-3">
+                    <a href="{{ url_for('admin.reports') }}" class="btn btn-primary">
+                        <i class="fas fa-chart-bar me-1"></i> View Detailed Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Appointments chart
+        var appointmentsCtx = document.getElementById('appointmentsChart').getContext('2d');
+        var appointmentsChart = new Chart(appointmentsCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_labels|tojson }},
+                datasets: [{
+                    label: 'Number of Appointments',
+                    data: {{ chart_data|tojson }},
+                    backgroundColor: 'rgba(13, 110, 253, 0.6)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

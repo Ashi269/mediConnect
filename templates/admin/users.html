@@ -1,0 +1,236 @@
+{% extends 'layout.html' %}
+
+{% block title %}User Management - MediConnect Pro{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="mb-3">
+            <i class="fas fa-users me-2"></i>User Management
+        </h2>
+        <p class="text-muted">Manage all registered users in the system.</p>
+    </div>
+</div>
+
+<!-- Tab navigation -->
+<ul class="nav nav-tabs mb-4" id="usersTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="doctors-tab" data-bs-toggle="tab" data-bs-target="#doctors" type="button" role="tab" aria-controls="doctors" aria-selected="true">
+            <i class="fas fa-user-md me-1"></i> Doctors
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="patients-tab" data-bs-toggle="tab" data-bs-target="#patients" type="button" role="tab" aria-controls="patients" aria-selected="false">
+            <i class="fas fa-user-injured me-1"></i> Patients
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="staff-tab" data-bs-toggle="tab" data-bs-target="#staff" type="button" role="tab" aria-controls="staff" aria-selected="false">
+            <i class="fas fa-user-nurse me-1"></i> Staff
+        </button>
+    </li>
+</ul>
+
+<!-- Tab content -->
+<div class="tab-content" id="usersTabContent">
+    <!-- Doctors tab -->
+    <div class="tab-pane fade show active" id="doctors" role="tabpanel" aria-labelledby="doctors-tab">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-md me-1"></i> Registered Doctors
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    {% if doctors %}
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Specialty</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for doctor in doctors %}
+                                    <tr>
+                                        <td>Dr. {{ doctor.first_name }} {{ doctor.last_name }}</td>
+                                        <td>{{ doctor.specialty }}</td>
+                                        <td>{{ doctor.user.email }}</td>
+                                        <td>{{ doctor.phone }}</td>
+                                        <td>
+                                            {% if doctor.user.is_approved %}
+                                                {% if doctor.user.is_active %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Disabled</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">Pending Approval</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                {% if doctor.user.is_active %}
+                                                    <a href="{{ url_for('admin.toggle_user_status', id=doctor.user.id) }}" class="btn btn-outline-danger">
+                                                        <i class="fas fa-ban"></i> Disable
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{{ url_for('admin.toggle_user_status', id=doctor.user.id) }}" class="btn btn-outline-success">
+                                                        <i class="fas fa-check"></i> Enable
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-user-md fa-3x text-muted mb-3"></i>
+                            <p>No doctors found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Patients tab -->
+    <div class="tab-pane fade" id="patients" role="tabpanel" aria-labelledby="patients-tab">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-injured me-1"></i> Registered Patients
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    {% if patients %}
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Gender</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for patient in patients %}
+                                    <tr>
+                                        <td>{{ patient.first_name }} {{ patient.last_name }}</td>
+                                        <td>{{ patient.user.email }}</td>
+                                        <td>{{ patient.phone }}</td>
+                                        <td>{{ patient.gender|capitalize if patient.gender else 'N/A' }}</td>
+                                        <td>
+                                            {% if patient.user.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Disabled</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                {% if patient.user.is_active %}
+                                                    <a href="{{ url_for('admin.toggle_user_status', id=patient.user.id) }}" class="btn btn-outline-danger">
+                                                        <i class="fas fa-ban"></i> Disable
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{{ url_for('admin.toggle_user_status', id=patient.user.id) }}" class="btn btn-outline-success">
+                                                        <i class="fas fa-check"></i> Enable
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-user-injured fa-3x text-muted mb-3"></i>
+                            <p>No patients found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Staff tab -->
+    <div class="tab-pane fade" id="staff" role="tabpanel" aria-labelledby="staff-tab">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-nurse me-1"></i> Registered Staff
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    {% if staff %}
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Position</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for staff_member in staff %}
+                                    <tr>
+                                        <td>{{ staff_member.first_name }} {{ staff_member.last_name }}</td>
+                                        <td>{{ staff_member.position|capitalize }}</td>
+                                        <td>{{ staff_member.user.email }}</td>
+                                        <td>{{ staff_member.phone }}</td>
+                                        <td>
+                                            {% if staff_member.user.is_approved %}
+                                                {% if staff_member.user.is_active %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Disabled</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-warning text-dark">Pending Approval</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                {% if staff_member.user.is_active %}
+                                                    <a href="{{ url_for('admin.toggle_user_status', id=staff_member.user.id) }}" class="btn btn-outline-danger">
+                                                        <i class="fas fa-ban"></i> Disable
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{{ url_for('admin.toggle_user_status', id=staff_member.user.id) }}" class="btn btn-outline-success">
+                                                        <i class="fas fa-check"></i> Enable
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-user-nurse fa-3x text-muted mb-3"></i>
+                            <p>No staff found</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

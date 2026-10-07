@@ -1,0 +1,7 @@
+# superadmin@example.com / superadmin123
+flask
+flask-mail
+flask-login
+flask-sqlalchemy
+flask-wtf
+email_validator

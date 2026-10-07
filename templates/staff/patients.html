@@ -1,0 +1,118 @@
+{% extends 'layout.html' %}
+
+{% block title %}Patients - MediConnect Pro{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="mb-3">
+            <i class="fas fa-user-injured me-2"></i>Patients
+        </h2>
+        <p class="text-muted">Manage patient records and information.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{{ url_for('staff.new_patient') }}" class="btn btn-primary">
+            <i class="fas fa-user-plus me-1"></i> Register New Patient
+        </a>
+    </div>
+</div>
+
+<!-- Search Form -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-search me-1"></i> Search Patients
+        </h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('staff.patients') }}" method="get">
+            <div class="input-group">
+                <input type="text" name="search" class="form-control" placeholder="Search by name or phone number..." value="{{ search }}">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search me-1"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Patients list -->
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-1"></i> Patient List
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            {% if patients %}
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Gender</th>
+                            <th>Age</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for patient in patients %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('staff.patient_detail', id=patient.id) }}">
+                                        {{ patient.first_name }} {{ patient.last_name }}
+                                    </a>
+                                </td>
+                                <td>{{ patient.gender|capitalize if patient.gender else 'N/A' }}</td>
+                                <td>{{ patient.age if patient.age else 'N/A' }}</td>
+                                <td>{{ patient.phone }}</td>
+                                <td>{{ patient.user.email }}</td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Actions
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" href="{{ url_for('staff.patient_detail', id=patient.id) }}">
+                                                    <i class="fas fa-eye me-1"></i> View Details
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ url_for('staff.new_appointment') }}?patient_id={{ patient.id }}">
+                                                    <i class="fas fa-calendar-plus me-1"></i> Schedule Appointment
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ url_for('staff.create_invoice') }}?patient_id={{ patient.id }}">
+                                                    <i class="fas fa-file-invoice-dollar me-1"></i> Create Invoice
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-user-injured fa-3x text-muted mb-3"></i>
+                    <p>No patients found</p>
+                    {% if search %}
+                        <p class="text-muted">No results match your search criteria</p>
+                        <a href="{{ url_for('staff.patients') }}" class="btn btn-primary">Clear Search</a>
+                    {% else %}
+                        <p class="text-muted">No patients have been registered yet</p>
+                        <a href="{{ url_for('staff.new_patient') }}" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-1"></i> Register First Patient
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

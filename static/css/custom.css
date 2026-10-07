@@ -1,0 +1,174 @@
+/* MediConnect Pro - Custom CSS */
+
+/* ==================== Main Colors ==================== */
+:root {
+  --primary-color: #0d6efd;      /* Bootstrap primary blue */
+  --secondary-color: #f4a261;    /* Soft orange accent color */
+  --light-bg: #f8f9fa;           /* Light background for sections */
+  --medical-blue-light: #e6f2ff; /* Light blue for medical-themed elements */
+  --medical-blue-dark: #004080;  /* Dark blue for emphasis */
+}
+
+/* ==================== General Styles ==================== */
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1 0 auto;
+  padding-bottom: 2rem;
+}
+
+.footer {
+  flex-shrink: 0;
+}
+
+/* ==================== Navigation ==================== */
+.navbar-brand {
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* ==================== Cards ==================== */
+.card {
+  border-radius: 0.5rem;
+  border: none;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  border-radius: 0.5rem 0.5rem 0 0 !important;
+  border-bottom: none;
+}
+
+.card-footer {
+  border-radius: 0 0 0.5rem 0.5rem !important;
+  border-top: none;
+}
+
+/* ==================== Dashboard Stats ==================== */
+.display-4 {
+  font-weight: 700;
+}
+
+/* ==================== Buttons ==================== */
+.btn {
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: var(--medical-blue-dark);
+  border-color: var(--medical-blue-dark);
+}
+
+.btn-outline-primary {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+/* ==================== Forms ==================== */
+.form-control, .form-select {
+  border-radius: 0.25rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* ==================== Tables ==================== */
+.table {
+  vertical-align: middle;
+}
+
+.table th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ==================== Utilities ==================== */
+.feature-icon, .feature-icon-small {
+  width: 3rem;
+  height: 3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature-icon-small {
+  width: 2rem;
+  height: 2rem;
+}
+
+/* ==================== Badges ==================== */
+.badge {
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+}
+
+/* ==================== Responsive Adjustments ==================== */
+@media (max-width: 767.98px) {
+  .display-4 {
+    font-size: 2rem;
+  }
+  
+  .navbar-brand {
+    font-size: 1.25rem;
+  }
+  
+  .table {
+    font-size: 0.875rem;
+  }
+}
+
+/* ==================== Animations ==================== */
+.dropdown-menu {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== Medical-specific Styles ==================== */
+.prescription-item {
+  background-color: var(--medical-blue-light);
+  border-left: 4px solid var(--primary-color);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 0.25rem;
+}
+
+/* ==================== Dark Mode Adjustments ==================== */
+[data-bs-theme=dark] .prescription-item {
+  background-color: rgba(13, 110, 253, 0.1);
+}

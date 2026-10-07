@@ -1,0 +1,109 @@
+{% extends 'layout.html' %}
+
+{% block title %}Prescriptions - MediConnect Pro{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="mb-3">
+            <i class="fas fa-prescription me-2"></i>Prescriptions
+        </h2>
+        <p class="text-muted">Manage patient prescriptions and medications.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{{ url_for('doctor.new_prescription') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> New Prescription
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-filter me-1"></i> Filters
+        </h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('doctor.prescriptions') }}" method="get">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="patient_id" class="form-label">Patient</label>
+                    <select name="patient_id" id="patient_id" class="form-select">
+                        <option value="">All Patients</option>
+                        {% for patient in patients %}
+                            <option value="{{ patient.id }}" {% if selected_patient_id|int == patient.id %}selected{% endif %}>
+                                {{ patient.first_name }} {{ patient.last_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Apply Filters</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Prescriptions list -->
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-1"></i> Prescription List
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            {% if prescriptions %}
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Patient</th>
+                            <th>Diagnosis</th>
+                            <th>Medications</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prescription in prescriptions %}
+                            <tr>
+                                <td>{{ prescription.date_prescribed.strftime('%b %d, %Y') }}</td>
+                                <td>
+                                    <a href="{{ url_for('doctor.patient_detail', id=prescription.patient.id) }}">
+                                        {{ prescription.patient.first_name }} {{ prescription.patient.last_name }}
+                                    </a>
+                                </td>
+                                <td>{{ prescription.diagnosis|truncate(30) }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ prescription.medications.count() }} medications</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ url_for('doctor.edit_prescription', id=prescription.id) }}" class="btn btn-outline-primary">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-prescription fa-3x text-muted mb-3"></i>
+                    <p>No prescriptions found</p>
+                    {% if selected_patient_id %}
+                        <a href="{{ url_for('doctor.prescriptions') }}" class="btn btn-primary">Clear Filters</a>
+                    {% else %}
+                        <a href="{{ url_for('doctor.new_prescription') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i> Create New Prescription
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

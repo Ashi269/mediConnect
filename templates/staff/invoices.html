@@ -1,0 +1,163 @@
+{% extends 'layout.html' %}
+
+{% block title %}Invoices - MediConnect Pro{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="mb-3">
+            <i class="fas fa-file-invoice-dollar me-2"></i>Invoices
+        </h2>
+        <p class="text-muted">Manage patient invoices and billing information.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{{ url_for('staff.create_invoice') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> Create New Invoice
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-filter me-1"></i> Filters
+        </h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('staff.invoices') }}" method="get">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="status" class="form-label">Status</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="paid" {% if status_filter == 'paid' %}selected{% endif %}>Paid</option>
+                        <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                        <option value="overdue" {% if status_filter == 'overdue' %}selected{% endif %}>Overdue</option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="patient_id" class="form-label">Patient</label>
+                    <select name="patient_id" id="patient_id" class="form-select">
+                        <option value="">All Patients</option>
+                        {% for patient in patients %}
+                            <option value="{{ patient.id }}" {% if selected_patient_id|int == patient.id %}selected{% endif %}>
+                                {{ patient.first_name }} {{ patient.last_name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="text-end">
+                <a href="{{ url_for('staff.invoices') }}" class="btn btn-secondary me-2">Reset</a>
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Invoices list -->
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-1"></i> Invoice List
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            {% if invoices %}
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Date</th>
+                            <th>Patient</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in invoices %}
+                            <tr>
+                                <td>INV-{{ invoice.id }}</td>
+                                <td>{{ invoice.invoice_date.strftime('%b %d, %Y') }}</td>
+                                <td>
+                                    <a href="{{ url_for('staff.patient_detail', id=invoice.patient.id) }}">
+                                        {{ invoice.patient.first_name }} {{ invoice.patient.last_name }}
+                                    </a>
+                                </td>
+                                <td>{{ format_currency(invoice.total_amount) }}</td>
+                                <td>
+                                    {% if invoice.status == 'pending' %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    {% elif invoice.status == 'paid' %}
+                                        <span class="badge bg-success">Paid</span>
+                                    {% elif invoice.status == 'cancelled' %}
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    {% elif invoice.status == 'overdue' %}
+                                        <span class="badge bg-danger">Overdue</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                            Actions
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li>
+                                                <a class="dropdown-item" href="{{ url_for('billing.view_invoice', id=invoice.id) }}">
+                                                    <i class="fas fa-eye me-1"></i> View
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ url_for('billing.download_invoice', id=invoice.id) }}">
+                                                    <i class="fas fa-download me-1"></i> Download
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            {% if invoice.status != 'paid' %}
+                                                <li>
+                                                    <form action="{{ url_for('staff.update_invoice_status', id=invoice.id) }}" method="post">
+                                                        <input type="hidden" name="status" value="paid">
+                                                        <button type="submit" class="dropdown-item text-success">
+                                                            <i class="fas fa-check-circle me-1"></i> Mark as Paid
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            {% endif %}
+                                            {% if invoice.status != 'cancelled' %}
+                                                <li>
+                                                    <form action="{{ url_for('staff.update_invoice_status', id=invoice.id) }}" method="post">
+                                                        <input type="hidden" name="status" value="cancelled">
+                                                        <button type="submit" class="dropdown-item text-danger">
+                                                            <i class="fas fa-times-circle me-1"></i> Cancel Invoice
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-file-invoice-dollar fa-3x text-muted mb-3"></i>
+                    <p>No invoices found</p>
+                    {% if status_filter != 'all' or selected_patient_id %}
+                        <a href="{{ url_for('staff.invoices') }}" class="btn btn-primary">Clear Filters</a>
+                    {% else %}
+                        <a href="{{ url_for('staff.create_invoice') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i> Create New Invoice
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

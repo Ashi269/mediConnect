@@ -1,0 +1,83 @@
+{% extends 'layout.html' %}
+
+{% block title %}My Prescriptions - MediConnect Pro{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="mb-3">
+            <i class="fas fa-prescription me-2"></i>My Prescriptions
+        </h2>
+        <p class="text-muted">View your medication history and active prescriptions.</p>
+    </div>
+</div>
+
+<!-- Prescriptions list -->
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-1"></i> Prescription History
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if prescriptions %}
+            <div class="row">
+                {% for prescription in prescriptions %}
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">{{ prescription.date_prescribed.strftime('%b %d, %Y') }}</h5>
+                                    <span class="badge bg-primary">{{ prescription.medications.count() }} medications</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Doctor:</strong> Dr. {{ prescription.doctor.first_name }} {{ prescription.doctor.last_name }}</p>
+                                <p><strong>Specialty:</strong> {{ prescription.doctor.specialty }}</p>
+                                <p><strong>Diagnosis:</strong> {{ prescription.diagnosis }}</p>
+                                
+                                <div class="mt-3">
+                                    <h6>Medications:</h6>
+                                    <ul class="list-group list-group-flush">
+                                        {% for medication in prescription.medications %}
+                                            <li class="list-group-item px-0">
+                                                <div class="fw-bold">{{ medication.name }}</div>
+                                                <div class="small">
+                                                    <span class="me-2"><i class="fas fa-prescription-bottle text-primary me-1"></i> {{ medication.dosage }}</span>
+                                                    <span class="me-2"><i class="fas fa-clock text-primary me-1"></i> {{ medication.frequency }}</span>
+                                                    <span><i class="fas fa-calendar-day text-primary me-1"></i> {{ medication.duration }}</span>
+                                                </div>
+                                                {% if medication.notes %}
+                                                    <div class="small text-muted mt-1">{{ medication.notes }}</div>
+                                                {% endif %}
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                
+                                {% if prescription.notes %}
+                                    <div class="mt-3">
+                                        <h6>Notes:</h6>
+                                        <p class="text-muted">{{ prescription.notes }}</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer">
+                                <a href="{{ url_for('patient.prescription_detail', id=prescription.id) }}" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i> View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-prescription fa-3x text-muted mb-3"></i>
+                <p>No prescriptions found</p>
+                <p class="text-muted">You don't have any prescriptions in your medical history yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

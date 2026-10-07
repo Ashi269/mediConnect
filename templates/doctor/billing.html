@@ -1,0 +1,131 @@
+{% extends 'layout.html' %}
+
+{% block title %}Billing - MediConnect Pro{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2 class="mb-3">
+            <i class="fas fa-file-invoice-dollar me-2"></i>Billing
+        </h2>
+        <p class="text-muted">Manage invoices and billing for your patients.</p>
+    </div>
+</div>
+
+<!-- Pending Invoices -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-clock me-1"></i> Completed Appointments Without Invoices
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if appointments_without_invoices %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Patient</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in appointments_without_invoices %}
+                            <tr>
+                                <td>{{ appointment.start_time.strftime('%b %d, %Y') }}</td>
+                                <td>{{ appointment.patient.first_name }} {{ appointment.patient.last_name }}</td>
+                                <td>{{ appointment.reason|truncate(30) }}</td>
+                                <td>
+                                    <span class="badge {% if appointment.status == 'completed' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                        {{ appointment.status|capitalize }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('doctor.create_invoice', appointment_id=appointment.id) }}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-file-invoice-dollar me-1"></i> Create Invoice
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                <p>No pending appointments that need invoices</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Invoices -->
+<div class="card shadow">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-1"></i> Recent Invoices
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if invoices %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <th>Date</th>
+                            <th>Patient</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in invoices %}
+                            <tr>
+                                <td>INV-{{ invoice.id }}</td>
+                                <td>{{ invoice.invoice_date.strftime('%b %d, %Y') }}</td>
+                                <td>
+                                    <a href="{{ url_for('doctor.patient_detail', id=invoice.patient.id) }}">
+                                        {{ invoice.patient.first_name }} {{ invoice.patient.last_name }}
+                                    </a>
+                                </td>
+                                <td>{{ format_currency(invoice.total_amount) }}</td>
+                                <td>
+                                    {% if invoice.status == 'pending' %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    {% elif invoice.status == 'paid' %}
+                                        <span class="badge bg-success">Paid</span>
+                                    {% elif invoice.status == 'cancelled' %}
+                                        <span class="badge bg-danger">Cancelled</span>
+                                    {% elif invoice.status == 'overdue' %}
+                                        <span class="badge bg-danger">Overdue</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ url_for('billing.view_invoice', id=invoice.id) }}" class="btn btn-outline-primary">
+                                            <i class="fas fa-eye"></i> View
+                                        </a>
+                                        <a href="{{ url_for('billing.download_invoice', id=invoice.id) }}" class="btn btn-outline-secondary">
+                                            <i class="fas fa-download"></i> Download
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-file-invoice-dollar fa-3x text-muted mb-3"></i>
+                <p>No invoices found</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

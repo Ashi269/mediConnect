@@ -1,0 +1,234 @@
+{% extends 'layout.html' %}
+
+{% block title %}Patient Dashboard - MediConnect Pro{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h2 class="mb-3">
+            <i class="fas fa-home me-2"></i>Patient Dashboard
+        </h2>
+        <p class="text-muted">Welcome back, {{ patient.first_name }} {{ patient.last_name }}</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="{{ url_for('patient.new_appointment') }}" class="btn btn-primary">
+            <i class="fas fa-calendar-plus me-1"></i> Book Appointment
+        </a>
+    </div>
+</div>
+
+<!-- Quick stats -->
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 fw-bold text-primary mb-2">{{ upcoming_appointments|length }}</div>
+                <div class="text-muted">Upcoming Appointments</div>
+            </div>
+            <div class="card-footer bg-primary text-white">
+                <i class="fas fa-calendar-check me-1"></i> Scheduled
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 fw-bold text-warning mb-2">{{ recent_prescriptions|length }}</div>
+                <div class="text-muted">Recent Prescriptions</div>
+            </div>
+            <div class="card-footer bg-warning text-dark">
+                <i class="fas fa-prescription me-1"></i> Medication
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <div class="display-4 fw-bold text-danger mb-2">{{ pending_invoices|length }}</div>
+                <div class="text-muted">Pending Invoices</div>
+            </div>
+            <div class="card-footer bg-danger text-white">
+                <i class="fas fa-file-invoice-dollar me-1"></i> Payment Due
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Upcoming appointments -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-day me-1"></i> Upcoming Appointments
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_appointments %}
+                    <div class="list-group">
+                        {% for appointment in upcoming_appointments %}
+                            <div class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">
+                                        Dr. {{ appointment.doctor.first_name }} {{ appointment.doctor.last_name }}
+                                        <small class="text-muted">{{ appointment.doctor.specialty }}</small>
+                                    </h5>
+                                    <small class="text-primary fw-bold">{{ appointment.start_time.strftime('%b %d, %Y') }}</small>
+                                </div>
+                                <p class="mb-1">{{ appointment.start_time.strftime('%I:%M %p') }} - {{ appointment.end_time.strftime('%I:%M %p') }}</p>
+                                <p class="mb-1 text-muted">{{ appointment.reason }}</p>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <span class="badge bg-warning text-dark">{{ appointment.status|capitalize }}</span>
+                                    <form action="{{ url_for('appointments.cancel_appointment', id=appointment.id) }}" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to cancel this appointment?');">
+                                            <i class="fas fa-times-circle me-1"></i> Cancel
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('patient.appointments') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-calendar me-1"></i> View All Appointments
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <p>You don't have any upcoming appointments</p>
+                        <a href="{{ url_for('patient.new_appointment') }}" class="btn btn-primary">
+                            <i class="fas fa-calendar-plus me-1"></i> Book Appointment
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Medication reminders -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-pills me-1"></i> Medication Reminders
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if medications %}
+                    <div class="list-group">
+                        {% for medication in medications %}
+                            <div class="list-group-item">
+                                <h6 class="mb-1">{{ medication.name }}</h6>
+                                <p class="mb-1 small">
+                                    <i class="fas fa-prescription-bottle me-1 text-primary"></i> {{ medication.dosage }}
+                                </p>
+                                <p class="mb-1 small">
+                                    <i class="fas fa-clock me-1 text-primary"></i> {{ medication.frequency }}
+                                </p>
+                                <p class="mb-1 small">
+                                    <i class="fas fa-calendar-alt me-1 text-primary"></i> {{ medication.duration }}
+                                </p>
+                                {% if medication.notes %}
+                                    <p class="mb-0 small text-muted">
+                                        <i class="fas fa-sticky-note me-1"></i> {{ medication.notes }}
+                                    </p>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-pills fa-3x text-muted mb-3"></i>
+                        <p>No active medications</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent prescriptions -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-prescription me-1"></i> Recent Prescriptions
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_prescriptions %}
+                    <div class="list-group">
+                        {% for prescription in recent_prescriptions %}
+                            <a href="{{ url_for('patient.prescription_detail', id=prescription.id) }}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">Dr. {{ prescription.doctor.first_name }} {{ prescription.doctor.last_name }}</h6>
+                                    <small>{{ prescription.date_prescribed.strftime('%b %d, %Y') }}</small>
+                                </div>
+                                <p class="mb-1"><strong>Diagnosis:</strong> {{ prescription.diagnosis|truncate(50) }}</p>
+                                <small class="text-muted">{{ prescription.medications.count() }} medications</small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('patient.prescriptions') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-prescription me-1"></i> View All Prescriptions
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-prescription fa-3x text-muted mb-3"></i>
+                        <p>No recent prescriptions</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pending invoices -->
+    <div class="col-md-6 mb-4">
+        <div class="card shadow h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-file-invoice-dollar me-1"></i> Pending Invoices
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if pending_invoices %}
+                    <div class="list-group">
+                        {% for invoice in pending_invoices %}
+                            <a href="{{ url_for('patient.invoice_detail', id=invoice.id) }}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">Invoice #INV-{{ invoice.id }}</h6>
+                                    <small class="text-danger">Due: {{ invoice.due_date.strftime('%b %d, %Y') if invoice.due_date else 'Not set' }}</small>
+                                </div>
+                                <p class="mb-1">
+                                    <strong>Amount:</strong> {{ format_currency(invoice.total_amount) }}
+                                </p>
+                                <small class="text-muted">
+                                    {% if invoice.appointment %}
+                                        For appointment on {{ invoice.appointment.start_time.strftime('%b %d, %Y') }}
+                                    {% else %}
+                                        Created on {{ invoice.invoice_date.strftime('%b %d, %Y') }}
+                                    {% endif %}
+                                </small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{{ url_for('patient.invoices') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-file-invoice-dollar me-1"></i> View All Invoices
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <p>No pending invoices</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
